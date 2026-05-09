@@ -1,0 +1,13 @@
+patch:
+  # 1. 开启翻页快捷键
+  "key_binder/bindings/@next": { when: has_menu, accept: comma, send: Page_Up }
+  "key_binder/bindings/@next 1": { when: has_menu, accept: period, send: Page_Down }
+
+  # 2. 修改标点映射，去掉 { commit: ... } 这种强制上屏逻辑
+  # 改为字符串形式，这样它们在有候选框时就不会抢占信号
+  "punctuator/full_shape/,": "，"
+  "punctuator/full_shape/.": "。"
+  "punctuator/half_shape/,": "，"
+  "punctuator/half_shape/.": "。"
+
+  "menu/page_size": 9  # 把 5 改成一个你平时不用的数字
