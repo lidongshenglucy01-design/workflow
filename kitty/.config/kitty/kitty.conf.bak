@@ -1,0 +1,13 @@
+# Shell
+shell /opt/homebrew/bin/fish
+
+# 字体
+font_family      JetBrainsMono Nerd Font
+font_size        14.0
+
+# 窗口
+window_padding_width 8
+
+# 关闭时不提示
+confirm_os_window_close 0
+include nord.conf

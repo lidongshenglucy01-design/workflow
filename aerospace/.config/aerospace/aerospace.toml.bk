@@ -1,0 +1,128 @@
+config-version = 2
+start-at-login = true
+
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'auto'
+
+persistent-workspaces = ["1", "2", "3", "4", "5", "6"]
+
+[gaps]
+inner.horizontal = 0
+inner.vertical = 0
+outer.left = 0
+outer.top = 0
+outer.right = 0
+outer.bottom = 0
+
+# ======================================
+# 工作区窗口自动分配规则
+# ======================================
+
+# --- 1区：Kitty ---
+[[on-window-detected]]
+if.app-id = 'net.kovidgoyal.kitty'
+run = ['layout tiling', 'move-node-to-workspace 1']
+check-further-callbacks = false
+
+# --- 2区：Chrome 学习 ---
+[[on-window-detected]]
+if.app-id = 'com.google.Chrome'
+run = ['layout tiling', 'move-node-to-workspace 2']
+check-further-callbacks = false
+
+# --- 3区：Obsidian ---
+[[on-window-detected]]
+if.app-id = 'md.obsidian'
+run = ['layout tiling', 'move-node-to-workspace 3']
+check-further-callbacks = false
+
+# --- 4区：微信主窗口（平铺） ---
+[[on-window-detected]]
+if.app-id = 'com.tencent.xinWeChat'
+if.window-title-regex-substring = '微信|WeChat'
+run = ['layout tiling', 'move-node-to-workspace 4']
+check-further-callbacks = false
+
+# --- 4区：微信子窗口（音视频、图片、小程序等，浮动） ---
+[[on-window-detected]]
+if.app-id = 'com.tencent.xinWeChat'
+run = ['layout floating', 'move-node-to-workspace 4']
+check-further-callbacks = false
+
+# --- 5区：Safari 娱乐 ---
+[[on-window-detected]]
+if.app-id = 'com.apple.Safari'
+run = ['layout tiling', 'move-node-to-workspace 5']
+check-further-callbacks = false
+
+# ======================================
+# 系统/工具窗口：浮动，不改变工作区
+# ======================================
+
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences'
+run = 'layout floating'
+check-further-callbacks = false
+
+[[on-window-detected]]
+if.app-id = 'com.apple.ActivityMonitor'
+run = 'layout floating'
+check-further-callbacks = false
+
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = 'layout floating'
+check-further-callbacks = false
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Preview'
+run = 'layout floating'
+check-further-callbacks = false
+
+[[on-window-detected]]
+if.window-title-regex-substring = '登录|Sign In|Login'
+run = 'layout floating'
+check-further-callbacks = false
+
+# ======================================
+# 兜底：未匹配窗口 → 6区（必须最后）
+# ======================================
+[[on-window-detected]]
+run = ['layout floating', 'move-node-to-workspace 6']
+check-further-callbacks = false
+
+# ======================================
+# 快捷键绑定
+# ======================================
+[mode.main.binding]
+ctrl-1 = 'workspace 1'
+ctrl-2 = 'workspace 2'
+ctrl-3 = 'workspace 3'
+ctrl-4 = 'workspace 4'
+ctrl-5 = 'workspace 5'
+ctrl-6 = 'workspace 6'
+
+ctrl-shift-1 = 'move-node-to-workspace 1'
+ctrl-shift-2 = 'move-node-to-workspace 2'
+ctrl-shift-3 = 'move-node-to-workspace 3'
+ctrl-shift-4 = 'move-node-to-workspace 4'
+ctrl-shift-5 = 'move-node-to-workspace 5'
+ctrl-shift-6 = 'move-node-to-workspace 6'
+
+alt-h = 'focus left'
+alt-j = 'focus down'
+alt-k = 'focus up'
+alt-l = 'focus right'
+
+alt-tab = 'workspace-back-and-forth'
+alt-f = 'fullscreen'
+
+alt-shift-semicolon = 'mode service'
+
+[mode.service.binding]
+esc = ['reload-config', 'mode main']
+r = ['flatten-workspace-tree', 'mode main']
+f = ['layout floating tiling', 'mode main']
