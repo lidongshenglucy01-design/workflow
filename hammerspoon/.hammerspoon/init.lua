@@ -12,7 +12,8 @@ local borrowHistory = {}
 local GHOST_WS = "ghost"
 local PASSWORD = "command123"
 local LAST_WS = "1"
-local inGhost = false -- 授权状态追踪
+local inGhost = false
+local ghostWatcher -- 前向声明，供 enterGhostWorkspace / leaveGhostWorkspace 引用
 
 -- 异步执行命令（不阻塞）
 local function asyncExec(cmd)
@@ -30,16 +31,20 @@ local function getCurrentWorkspace()
 end
 
 local function enterGhostWorkspace()
+	ghostWatcher:stop()
+	local ws = getCurrentWorkspace()
 	local button, input = hs.dialog.textPrompt("受限区域", "请输入访问密码：", "", "确认", "取消", true)
 	if button == "取消" then
+		ghostWatcher:start()
 		return
 	end
 	if input == PASSWORD then
-		LAST_WS = getCurrentWorkspace()
+		LAST_WS = ws
 		inGhost = true
 		asyncExec(AS_PATH .. " workspace " .. GHOST_WS)
 		hs.alert.show("已进入幽灵工作区", 1.5)
 	else
+		ghostWatcher:start()
 		hs.alert.show("密码错误", 1.5)
 	end
 end
@@ -47,6 +52,7 @@ end
 local function leaveGhostWorkspace()
 	inGhost = false
 	asyncExec(AS_PATH .. " workspace " .. LAST_WS)
+	ghostWatcher:start()
 	hs.alert.show("已离开幽灵工作区", 1.5)
 end
 
@@ -60,7 +66,7 @@ hs.hotkey.bind({ "ctrl" }, "0", function()
 end)
 
 -- 防止从 AeroSpace 菜单绕过密码直接进入幽灵区
-local ghostWatcher = hs.timer.new(0.5, function()
+ghostWatcher = hs.timer.new(0.5, function()
 	if inGhost then
 		return
 	end
@@ -77,12 +83,7 @@ ghostWatcher:start()
 
 -- 获取所有窗口信息
 local function getAeroChoices()
-	local f_current = io.popen(AS_PATH .. " list-workspaces --focused")
-	local currentWS = "1"
-	if f_current then
-		currentWS = (f_current:read("*a") or ""):gsub("%s+", "")
-		f_current:close()
-	end
+	local currentWS = getCurrentWorkspace()
 
 	local choices = {}
 	local f =
@@ -180,6 +181,62 @@ hs.hotkey.bind({ "alt", "shift" }, "space", function()
 		chooser:show()
 	end
 end)
+
+-- ══════════════════════════════════════════════════════
+--  一键归位
+-- ══════════════════════════════════════════════════════
+local function resetWorkspaces()
+	local f = io.popen(AS_PATH .. " list-windows --all --format '%{window-id}#%{app-name}#%{window-title}#%{workspace}'")
+	if not f then
+		return
+	end
+	local output = f:read("*a")
+	f:close()
+
+	local moveCount = 0
+	for line in output:gmatch("[^\r\n]+") do
+		local parts = {}
+		for part in (line .. "#"):gmatch("(.-)#") do
+			table.insert(parts, part)
+		end
+		local winID, appName, title, ws = parts[1], parts[2], parts[3], parts[4]
+		if winID and winID ~= "" then
+			winID = winID:gsub("%s+", "")
+			ws = ws:gsub("%s+", "")
+			appName = appName or ""
+			title = title or ""
+
+			local targetWS
+			if appName:lower():find("kitty") then
+				targetWS = "1"
+			elseif appName:lower():find("chrome") then
+				targetWS = "2"
+			elseif appName:lower():find("obsidian") then
+				targetWS = "3"
+			elseif appName:find("微信") or appName:lower():find("wechat") then
+				targetWS = "4"
+			elseif appName:lower():find("safari") then
+				targetWS = "5"
+			else
+				targetWS = "6"
+			end
+
+			if ws ~= "ghost" and ws ~= targetWS then
+				asyncExec(AS_PATH .. " move-node-to-workspace --window-id " .. winID .. " " .. targetWS)
+				moveCount = moveCount + 1
+			end
+		end
+	end
+
+	if moveCount > 0 then
+		hs.alert.show("已归位 " .. moveCount .. " 个窗口")
+	else
+		hs.alert.show("所有窗口已就位")
+	end
+end
+
+-- Alt+Shift+R：一键归位
+hs.hotkey.bind({ "alt", "shift" }, "r", resetWorkspaces)
 
 -- ══════════════════════════════════════════════════════
 --  基础维护

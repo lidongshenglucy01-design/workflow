@@ -36,3 +36,21 @@ alias help='tldr'
 # zoxide 替代 cd
 zoxide init fish | source
 export PATH="$HOME/.local/bin:$PATH"
+export EDITOR=nvim
+
+# Added by LM Studio CLI (lms)
+set -gx PATH $PATH /Users/lidongsheng/.lmstudio/bin
+# End of LM Studio CLI section
+
+# pnpm
+set -gx PNPM_HOME /Users/lidongsheng/Library/pnpm
+if not string match -q -- $PNPM_HOME $PATH
+    set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
+
+# Added by Antigravity CLI installer
+set -gx PATH "/Users/lidongsheng/.local/bin" $PATH
+
+# opencode
+fish_add_path /Users/lidongsheng/.opencode/bin
